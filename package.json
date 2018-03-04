@@ -1,5 +1,5 @@
 {
-  "name": "poi-plugin-map-hp",
+  "name": "poi-plugin-test",
   "version": "4.0.2",
   "description": "a plugin map hp for poi ##v1.0.0 init ##v1.1.0 add i18n support",
   "main": "index.es",
@@ -11,17 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/poooi/plugin-map-hp.git"
+    "url": "git+https://github.com/swordfeng/plugin-test.git"
   },
   "author": {
-    "name": "Chiba",
-    "link": "https://github.com/Chibaheit"
+    "name": "swordfeng",
+    "link": "https://github.com/swordfeng"
   },
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/poooi/plugin-map-hp/issues"
-  },
-  "homepage": "https://github.com/poooi/plugin-map-hp#readme",
   "dependencies": {},
   "poiPlugin": {
     "title": "Map HP",
