@@ -41,7 +41,6 @@ export class OneDriveClient {
                     window.removeAllListeners('closed');
                     window.close();
                     let code = req.url.searchParams.get('code');
-                    console.log(req.url.searchParams);
                     ev.removeListener('httpRequest', authCallback);
                     resolve(code);
                 } catch (err) {
@@ -57,7 +56,7 @@ export class OneDriveClient {
             u.searchParams.append('response_type', 'code');
             u.searchParams.append('redirect_uri', 'http://localhost:9080/onedrive_auth');
             u.searchParams.append('response_mode', 'query');
-            u.searchParams.append('scope', 'offline_access user.read');
+            u.searchParams.append('scope', 'offline_access user.read files.readwrite');
             u.searchParams.append('state', state);
             window.loadURL(u.toString());
             window.setMenu(null);
@@ -73,12 +72,13 @@ export class OneDriveClient {
                 .type('form')
                 .send({
                     client_id: CLIENT_ID,
-                    scope: 'user.read',
+                    scope: 'user.read files.readwrite',
                     code,
                     redirect_uri: 'http://localhost:9080/onedrive_auth',
                     grant_type: 'authorization_code',
                     client_secret: CLIENT_SECRET
                 })).body);
+        await this.init();
     }
     async refresh() {
         await this.save((await request
@@ -86,7 +86,7 @@ export class OneDriveClient {
             .type('form')
             .send({
                 client_id: CLIENT_ID,
-                scope: 'user.read',
+                scope: 'user.read files.readwrite',
                 refresh_token: this.refreshToken,
                 redirect_uri: 'http://localhost:9080/onedrive_auth',
                 grant_type: 'refresh_token',
@@ -94,7 +94,6 @@ export class OneDriveClient {
             })).body);
     }
     async save(data) {
-        console.log(data);
         let config = {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
@@ -112,6 +111,35 @@ export class OneDriveClient {
         }
         return this.accessToken;
     }
+    async init() {
+        if (!this.authorized) return;
+        let token = await this.getAccessToken();
+        try {
+            let response = await request
+                .get('https://graph.microsoft.com/v1.0/me/drive')
+                .set('Authorization', 'Bearer ' + token);
+            this.authorized = true;
+        } catch (err) {
+            console.log(err);
+            this.authorized = false;
+            return;
+        }
+    }
+    async list(filepath) {
+        let token = await this.getAccessToken();
+        console.log(token);
+        let url = filepath === '/'
+            ? 'https://graph.microsoft.com/v1.0/me/drive/special/approot/children'
+            : `https://graph.microsoft.com/v1.0/me/drive/special/approot:/{encodeURI(filepath)}:/children`
+        let response = await request
+            .get(url)
+            .set('Authorization', 'Bearer ' + token);
+        return response.body.value;
+    }
+    async createFolder(filepath) {}
+    async upload(filepath, readStream) {}
+    async download(filepath, writeStream) {}
+    async delete(filepath) {}
 }
 
 

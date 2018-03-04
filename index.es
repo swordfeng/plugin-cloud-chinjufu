@@ -1,6 +1,3 @@
-/* eslint-disable import/prefer-default-export */
-/* eslint-disable no-underscore-dangle */
-
 import React, { Component } from 'react'
 //import { join } from 'path-extra'
 //import { connect } from 'react-redux'
@@ -19,32 +16,33 @@ export const ev = new EventEmitter();
 //const __ = i18n['poi-plugin-map-hp'].__.bind(i18n['poi-plugin-map-hp'])
 
 export const settingsClass = class PoiPluginMapHp extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
+    constructor(props) {
+        super(props)
+        this.state = {
+        }
     }
-  }
-  render() {
-   return (
-       <h1>Hello</h1>
-   )
-  }
+    render() {
+        return (
+            <h1>Hello</h1>
+        )
+    }
 }
 
 export const pluginDidLoad = () => {
-  //window.addEventListener('game.response', handleResponse)
+    //window.addEventListener('game.response', handleResponse)
     let od = new OneDriveClient('/tmp/credential');
-    if (!od.authorized) {
-        localServer.start().then(() => {
-            return od.auth();
-        }).done(() => {
-            console.log(od);
-            localServer.stop();
-        });
-    }
+    (async function () {
+        await od.init();
+        if (!od.authorized) {
+            await localServer.start();
+            await od.auth();
+            await localServer.stop();
+        }
+        console.log(await od.list('/'))
+    })();
 }
 
 export const pluginWillUnload = () => {
-  //window.removeEventListener('game.response', handleResponse)
-  localServer.stop();
+    //window.removeEventListener('game.response', handleResponse)
+    localServer.stop();
 }
