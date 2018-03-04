@@ -60,7 +60,7 @@ const MapHpRow = ({ map, $map }) => {
 // chiba loves you!
 // TODO: correct this ambiguous variable during next event
 
-export const reactClass = connect(
+export const settingsClass = connect(
   (state, props) => ({
     $maps: state.const.$maps,
     maps: state.info.maps,
