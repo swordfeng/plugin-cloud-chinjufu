@@ -18,7 +18,9 @@
     "link": "https://github.com/swordfeng"
   },
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "superagent": "^3.8.2"
+  },
   "poiPlugin": {
     "title": "Map HP",
     "description": "Map HP",
