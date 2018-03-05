@@ -33,12 +33,14 @@ export const pluginDidLoad = () => {
     let od = new OneDriveClient('/tmp/credential');
     (async function () {
         await od.init();
+        /*
         if (!od.authorized) {
             await localServer.start();
             await od.auth();
             await localServer.stop();
         }
         console.log(await od.list('/'))
+        */
     })();
 }
 

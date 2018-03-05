@@ -3,6 +3,7 @@ import { ev } from './index.es';
 import { remote } from 'electron';
 import { URL } from 'url';
 import * as request from 'superagent';
+import * as path from 'path';
 
 const CLIENT_ID = '1d300286-97ec-48b1-9a9a-b03433562dc3';
 const CLIENT_SECRET = 'vrasgYITFP557![azMZ42~[';
@@ -11,6 +12,7 @@ export class OneDriveClient {
     constructor(credentialFile) {
         this.credentialFile = credentialFile;
         this.authorized = false;
+        this.session = null;
         if (fs.existsSync(credentialFile)) {
             try {
                 let config = JSON.parse(fs.readFileSync(credentialFile, 'utf8'));
@@ -119,27 +121,88 @@ export class OneDriveClient {
                 .get('https://graph.microsoft.com/v1.0/me/drive')
                 .set('Authorization', 'Bearer ' + token);
             this.authorized = true;
+            await this.sessionInit();
         } catch (err) {
             console.log(err);
             this.authorized = false;
             return;
         }
     }
+
+    async sessionInit() {
+        this.session = {
+            id: Date.now().toString()
+        };
+        let root = await this.list('/');
+        let names = root.map(item => item.name);
+        if (!names.includes('data')) await this.createFolder('data');
+        if (!names.includes('events')) await this.createFolder('events');
+        await this.createFolder('events/' + this.session.id);
+    }
+
     async list(filepath) {
         let token = await this.getAccessToken();
         console.log(token);
         let url = filepath === '/'
             ? 'https://graph.microsoft.com/v1.0/me/drive/special/approot/children'
-            : `https://graph.microsoft.com/v1.0/me/drive/special/approot:/{encodeURI(filepath)}:/children`
+            : `https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(filepath)}:/children`
         let response = await request
             .get(url)
             .set('Authorization', 'Bearer ' + token);
         return response.body.value;
     }
-    async createFolder(filepath) {}
-    async upload(filepath, readStream) {}
-    async download(filepath, writeStream) {}
-    async delete(filepath) {}
+    async createFolder(filepath) {
+        let token = await this.getAccessToken();
+        let { dir, name } = path.parse(filepath);
+        let url;
+        if (dir === '' || dir === '/') {
+            url = 'https://graph.microsoft.com/v1.0/me/drive/special/approot/children';
+        } else {
+            url = `https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(filepath)}:/children`;
+        }
+        let response = await request
+            .post(url)
+            .set('Authorization', 'Bearer ' + token)
+            .send({
+                name,
+                folder: {},
+                '@microsoft.graph.conflictBehavior': 'fail'
+              });
+        console.log(response);
+    }
+    async upload(filepath, data) {
+        if (data === null) {
+            let response = await request
+                .delete(`https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(filepath)}:/content`)
+                .set('Authorization', 'Bearer ' + await this.getAccessToken());
+        } else {
+            let response = await request
+                .put(`https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(filepath)}:/content`)
+                .set('Authorization', 'Bearer ' + await this.getAccessToken())
+                .type('text/plain')
+                .send(data);
+        }
+    }
+    async download(filepath) {
+        try {
+            let response = await request
+                .get(`https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(filepath)}:/content`)
+                .set('Authorization', 'Bearer ' + await this.getAccessToken());
+        } catch (err) {
+            if (err.status === 404) return null;
+            throw err;
+        }
+    }
+
+    async get(key) {
+        return await this.download(path.join(['data', encodeURIComponent(key)]));
+    }
+    async put(key, value) {
+        await this.upload(path.join(['data', encodeURIComponent(key)]), value);
+    }
+
+    async publish(type, data) {}
+    async retrieve(type, since) {}
 }
 
 
