@@ -9,6 +9,7 @@ import { Grid, Row, Col, Button } from 'react-bootstrap'
 import { EventEmitter } from 'events';
 import * as localServer from './localserver.es';
 import { OneDriveClient } from './onedrive.es';
+import { remote } from 'electron';
 
 export const ev = new EventEmitter();
 
@@ -86,7 +87,13 @@ export const settingsClass = class SyncSettings extends Component {
     }
 }
 
-let test = null;
+function cleanUp() {
+    ev.emit('reset');
+    if (client) client.deinit();
+    client = null;
+    localServer.stop();
+    remote.getCurrentWindow().removeListener('close', cleanUp);
+}
 
 export const pluginDidLoad = () => {
     loadCredential();
@@ -107,21 +114,14 @@ export const pluginDidLoad = () => {
             }
         }
     })();
-    test = setInterval(() => {
-        if (client) client.publish('test', 'message');
-    }, 1000);
+    remote.getCurrentWindow().on('close', cleanUp);
 }
 
 export const pluginWillUnload = () => {
-    ev.emit('reset');
-    if (client) client.deinit();
-    client = null;
-    localServer.stop();
-    clearInterval(test);
-    test = null;
+    cleanUp();
 }
 
-ev.on('ready', () => console.log('ready'));
-ev.on('reset', () => console.log('reset'));
-ev.on('retriveFinished', () => console.log('retriveFinished'));
+ev.on('ready', () => console.log('sync ready'));
+ev.on('reset', () => console.log('sync reset'));
+ev.on('retriveFinished', () => console.log('sync retriveFinished'));
 ev.on('error', err => console.error(err));

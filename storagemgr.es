@@ -36,6 +36,14 @@ export class StorageManager {
     async publish(type, message) {
         this.session.events.push({type, date: Date.now(), message});
     }
+    retrieve(type, since) {
+        if (since === undefined) since = this.session.lastSession;
+        let result = []
+        for (let msg of this.session.retrieved) {
+            if (msg.type === type && msg.date >= since) result.push(msg);
+        }
+        return result;
+    }
     async collect() {
         let data = JSON.stringify(this.session.events);
         this.session.events = [];
