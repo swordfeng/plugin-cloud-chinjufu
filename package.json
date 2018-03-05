@@ -1,6 +1,6 @@
 {
     "name": "poi-plugin-cloud-chinjufu",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "a plugin for data cloud sync",
     "main": "index.es",
     "scripts": {
