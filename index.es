@@ -10,6 +10,7 @@ import { EventEmitter } from 'events';
 import * as localServer from './localserver.es';
 import { OneDriveClient } from './onedrive.es';
 import { remote } from 'electron';
+import IPC from 'lib/ipc.es';
 
 export const ev = new EventEmitter();
 
@@ -87,12 +88,52 @@ export const settingsClass = class SyncSettings extends Component {
     }
 }
 
+ev.on('ready', () => console.log('sync ready'));
+ev.on('reset', () => console.log('sync reset'));
+ev.on('retrieveFinished', () => console.log('sync retriveFinished'));
+ev.on('error', err => console.error(err));
+
+class IPCObject extends EventEmitter {
+    constructor() {
+        super()
+        this.ready = false;
+        ev.on('ready', () => {
+            this.ready = true;
+            this.emit('ready');
+        });
+        ev.on('reset', () => {
+            this.ready = false;
+            this.emit('reset');
+        });
+        ev.on('retrieveFinished', () => this.emit('retrieveFinished'));
+        ev.on('error', err => {
+            console.error(err);
+            this.emit('error', err);
+        });
+    }
+    async getItem(key) {
+        if (!this.ready) throw new Error('Sync not ready');
+        return await client.getItem(key);
+    }
+    async setItem(key, value) {
+        if (!this.ready) throw new Error('Sync not ready');
+        return await client.setItem(key, value);
+    }
+    async publish(type, message) {
+        return await client.publish(key, value);
+    }
+    retrieve(type, since) {
+        return client.retrieve(type, since);
+    }
+}
+
 function cleanUp() {
     ev.emit('reset');
     if (client) client.deinit();
     client = null;
     localServer.stop();
     remote.getCurrentWindow().removeListener('close', cleanUp);
+    IPC.unregisterAll('cloud-chinjufu');
 }
 
 export const pluginDidLoad = () => {
@@ -115,13 +156,9 @@ export const pluginDidLoad = () => {
         }
     })();
     remote.getCurrentWindow().on('close', cleanUp);
+    IPC.register('cloud-chinjufu', new IPCObject());
 }
 
 export const pluginWillUnload = () => {
     cleanUp();
 }
-
-ev.on('ready', () => console.log('sync ready'));
-ev.on('reset', () => console.log('sync reset'));
-ev.on('retrieveFinished', () => console.log('sync retriveFinished'));
-ev.on('error', err => console.error(err));
