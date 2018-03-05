@@ -9,20 +9,15 @@ const CLIENT_ID = '1d300286-97ec-48b1-9a9a-b03433562dc3';
 const CLIENT_SECRET = 'vrasgYITFP557![azMZ42~[';
 
 export class OneDriveClient {
-    constructor(credentialFile) {
-        this.credentialFile = credentialFile;
+    constructor(onCredentialSet, initialCredential) {
+        this.onCredentialSet = onCredentialSet;
         this.authorized = false;
         this.session = null;
-        if (fs.existsSync(credentialFile)) {
-            try {
-                let config = JSON.parse(fs.readFileSync(credentialFile, 'utf8'));
-                this.accessToken = config.accessToken;
-                this.refreshToken = config.refreshToken;
-                this.expires = new Date(config.expires);
-                this.authorized = true;
-            }
-            catch (err) {
-            }
+        if (initialCredential) {
+            this.accessToken = initialCredential.accessToken;
+            this.refreshToken = initialCredential.refreshToken;
+            this.expires = new Date(initialCredential.expires);
+            this.authorized = true;
         }
     }
     async auth() {
@@ -96,15 +91,15 @@ export class OneDriveClient {
             })).body);
     }
     async save(data) {
-        let config = {
+        let credential = {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             expires: Date.now() + data.expires_in * 1000 - 30000
         };
-        fs.writeFileSync(this.credentialFile, JSON.stringify(config));
-        this.accessToken = config.accessToken;
-        this.refreshToken = config.refreshToken;
-        this.expires = new Date(config.expires);
+        this.onCredentialSet(credential);
+        this.accessToken = credential.accessToken;
+        this.refreshToken = credential.refreshToken;
+        this.expires = new Date(credential.expires);
         this.authorized = true;
     }
     async getAccessToken() {
@@ -114,19 +109,13 @@ export class OneDriveClient {
         return this.accessToken;
     }
     async init() {
-        if (!this.authorized) return;
+        if (!this.authorized) throw new Error('Unauthorized/No Credential');
         let token = await this.getAccessToken();
-        try {
-            let response = await request
-                .get('https://graph.microsoft.com/v1.0/me/drive')
-                .set('Authorization', 'Bearer ' + token);
-            this.authorized = true;
-            await this.sessionInit();
-        } catch (err) {
-            console.log(err);
-            this.authorized = false;
-            return;
-        }
+        let response = await request
+            .get('https://graph.microsoft.com/v1.0/me/drive')
+            .set('Authorization', 'Bearer ' + token);
+        this.authorized = true;
+        await this.sessionInit();
     }
 
     async sessionInit() {
@@ -142,7 +131,6 @@ export class OneDriveClient {
 
     async list(filepath) {
         let token = await this.getAccessToken();
-        console.log(token);
         let url = filepath === '/'
             ? 'https://graph.microsoft.com/v1.0/me/drive/special/approot/children'
             : `https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(filepath)}:/children`
@@ -168,7 +156,6 @@ export class OneDriveClient {
                 folder: {},
                 '@microsoft.graph.conflictBehavior': 'fail'
               });
-        console.log(response);
     }
     async upload(filepath, data) {
         if (data === null) {

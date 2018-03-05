@@ -4,6 +4,7 @@ import React, { Component } from 'react'
 //import { forEach, isNumber, get } from 'lodash'
 //import { ProgressBar, Checkbox } from 'react-bootstrap'
 //import { getHpStyle } from 'views/utils/game-utils'
+import { Grid, Row, Col, Button } from 'react-bootstrap'
 
 import { EventEmitter } from 'events';
 import * as localServer from './localserver.es';
@@ -15,32 +16,70 @@ export const ev = new EventEmitter();
 
 //const __ = i18n['poi-plugin-map-hp'].__.bind(i18n['poi-plugin-map-hp'])
 
-export const settingsClass = class PoiPluginMapHp extends Component {
+let credential;
+let client;
+
+function loadCredential() {
+    credential = localStorage.getItem('poi-sync');
+    if (credential !== null) credential = JSON.parse(credential);
+    if (!credential) credential = { type: 'none' };
+}
+
+function saveCredential() {
+    localStorage.setItem('poi-sync', JSON.stringify(credential));
+}
+
+export const settingsClass = class SyncSettings extends Component {
     constructor(props) {
         super(props)
-        this.state = {
-        }
+        this.state = { type: credential.type };
+    }
+    reset = () => {
+        credential = { type: 'none' };
+        saveCredential();
+        this.setState({ type: credential.type });
+    }
+    loginOneDrive = () => {
+        client = new OneDriveClient(odCred => {
+            credential = {
+                type: 'onedrive',
+                credential: odCred
+            };
+            saveCredential();
+        });
+        client.auth().then(() => this.setState({ type: credential.type }));
     }
     render() {
         return (
-            <h1>Hello</h1>
+            <Grid>
+                <Row>
+                    <Col xs={3}>Status: { this.state.type }</Col>
+                    <Col xs={2}><Button onClick={this.reset}>Reset</Button></Col>
+                    <Col xs={2}><Button onClick={this.loginOneDrive}>OneDrive</Button></Col>
+                </Row>
+            </Grid>
         )
     }
 }
 
 export const pluginDidLoad = () => {
     //window.addEventListener('game.response', handleResponse)
-    let od = new OneDriveClient('/tmp/credential');
+    loadCredential();
     (async function () {
-        await od.init();
-        /*
-        if (!od.authorized) {
-            await localServer.start();
-            await od.auth();
-            await localServer.stop();
+        if (credential.type === 'onedrive') {
+            client = new OneDriveClient(odCred => {
+                credential = {
+                    type: 'onedrive',
+                    credential: odCred
+                };
+                saveCredential();
+            }, credential.credential);
+            try {
+                await client.init();
+            } catch (err) {
+                throw err;
+            }
         }
-        console.log(await od.list('/'))
-        */
     })();
 }
 

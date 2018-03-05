@@ -1,43 +1,39 @@
 {
-  "name": "poi-plugin-test",
-  "version": "4.0.2",
-  "description": "a plugin map hp for poi ##v1.0.0 init ##v1.1.0 add i18n support",
-  "main": "index.es",
-  "scripts": {
-    "reset": "git clean -f && git checkout .",
-    "prepack": "poi-util-transpile --sm --replace",
-    "postpublish": "npm run reset",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/swordfeng/plugin-test.git"
-  },
-  "author": {
-    "name": "swordfeng",
-    "link": "https://github.com/swordfeng"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "superagent": "^3.8.2"
-  },
-  "poiPlugin": {
-    "title": "Map HP",
-    "description": "Map HP",
-    "icon": "fa/heart",
-    "priority": 8,
-    "apiVer": {
-      "6.99.99": "2.0.2",
-      "7.5.99": "3.0.6"
+    "name": "poi-plugin-cloud-chinjufu",
+    "version": "0.0.1",
+    "description": "a plugin for data cloud sync",
+    "main": "index.es",
+    "scripts": {
+        "reset": "git clean -f && git checkout .",
+        "prepack": "poi-util-transpile --sm --replace",
+        "postpublish": "npm run reset",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/swordfeng/plugin-cloud-chinjufu.git"
+    },
+    "author": {
+        "name": "swordfeng",
+        "link": "https://github.com/swordfeng"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "superagent": "^3.8.2"
+    },
+    "poiPlugin": {
+        "title": "Poi Sync",
+        "description": "Poi Sync",
+        "icon": "fa/pie-chart",
+        "priority": 100
+    },
+    "devDependencies": {
+        "babel-eslint": "^7.2.3",
+        "eslint": "^4.5.0",
+        "eslint-config-airbnb": "^15.1.0",
+        "eslint-plugin-import": "^2.7.0",
+        "eslint-plugin-jsx-a11y": "^5.1.1",
+        "eslint-plugin-react": "^7.3.0",
+        "poi-util-transpile": "^7.6.2"
     }
-  },
-  "devDependencies": {
-    "babel-eslint": "^7.2.3",
-    "eslint": "^4.5.0",
-    "eslint-config-airbnb": "^15.1.0",
-    "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-jsx-a11y": "^5.1.1",
-    "eslint-plugin-react": "^7.3.0",
-    "poi-util-transpile": "^7.6.2"
-  }
 }
