@@ -123,5 +123,5 @@ export const pluginWillUnload = () => {
 
 ev.on('ready', () => console.log('sync ready'));
 ev.on('reset', () => console.log('sync reset'));
-ev.on('retriveFinished', () => console.log('sync retriveFinished'));
+ev.on('retrieveFinished', () => console.log('sync retriveFinished'));
 ev.on('error', err => console.error(err));

@@ -75,6 +75,6 @@ export class StorageManager {
         } catch (err) {
             ev.emit('error', err);
         }
-        ev.emit('retriveFinished');
+        ev.emit('retrieveFinished');
     }
 }
