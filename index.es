@@ -10,8 +10,8 @@ import { EventEmitter } from 'events';
 import * as localServer from './localserver.es';
 import { OneDriveClient } from './onedrive.es';
 import { remote } from 'electron';
-import ipc from 'lib/ipc.es';
 
+const ipc = window.ipc;
 export const ev = new EventEmitter();
 
 //const { i18n } = window
@@ -20,6 +20,7 @@ export const ev = new EventEmitter();
 
 let credential;
 let client;
+let ipcObj;
 
 function loadCredential() {
     credential = localStorage.getItem('poi-sync-credential');
@@ -93,7 +94,7 @@ ev.on('reset', () => console.log('sync reset'));
 ev.on('retrieveFinished', () => console.log('sync retriveFinished'));
 ev.on('error', err => console.error(err));
 
-class IPCObject extends EventEmitter {
+class CloudChinjufuObject extends EventEmitter {
     constructor() {
         super()
         this.ready = false;
@@ -127,15 +128,6 @@ class IPCObject extends EventEmitter {
     }
 }
 
-function cleanUp() {
-    ev.emit('reset');
-    if (client) client.deinit();
-    client = null;
-    localServer.stop();
-    remote.getCurrentWindow().removeListener('close', cleanUp);
-    ipc.unregisterAll('cloud-chinjufu');
-}
-
 export const pluginDidLoad = () => {
     loadCredential();
     (async function () {
@@ -156,7 +148,16 @@ export const pluginDidLoad = () => {
         }
     })();
     remote.getCurrentWindow().on('close', cleanUp);
-    ipc.register('cloud-chinjufu', new IPCObject());
+    window.cloudChinjufu = new CloudChinjufuObject();
+}
+
+function cleanUp() {
+    ev.emit('reset');
+    if (client) client.deinit();
+    client = null;
+    localServer.stop();
+    remote.getCurrentWindow().removeListener('close', cleanUp);
+    window.cloudChinjufu = undefined;
 }
 
 export const pluginWillUnload = () => {

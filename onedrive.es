@@ -168,14 +168,17 @@ export class OneDriveClient extends StorageManager {
         }
     }
     async download(filepath) {
+        let response;
         try {
-            let response = await request
+            response = await request
                 .get(`https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(filepath)}:/content`)
-                .set('Authorization', 'Bearer ' + await this.getAccessToken());
+                .set('Authorization', 'Bearer ' + await this.getAccessToken())
+                .responseType('blob');
         } catch (err) {
             if (err.status === 404) return null;
             throw err;
         }
+        return response.body;
     }
 }
 
