@@ -10,7 +10,7 @@ import { EventEmitter } from 'events';
 import * as localServer from './localserver.es';
 import { OneDriveClient } from './onedrive.es';
 import { remote } from 'electron';
-import IPC from 'lib/ipc.es';
+import ipc from 'lib/ipc.es';
 
 export const ev = new EventEmitter();
 
@@ -133,7 +133,7 @@ function cleanUp() {
     client = null;
     localServer.stop();
     remote.getCurrentWindow().removeListener('close', cleanUp);
-    IPC.unregisterAll('cloud-chinjufu');
+    ipc.unregisterAll('cloud-chinjufu');
 }
 
 export const pluginDidLoad = () => {
@@ -156,7 +156,7 @@ export const pluginDidLoad = () => {
         }
     })();
     remote.getCurrentWindow().on('close', cleanUp);
-    IPC.register('cloud-chinjufu', new IPCObject());
+    ipc.register('cloud-chinjufu', new IPCObject());
 }
 
 export const pluginWillUnload = () => {
