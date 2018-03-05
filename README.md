@@ -1,7 +1,7 @@
 # plugin-cloud-chinjufu
 a cloud sync plugin for poi
 ## simple usage
-find `IPC.access('cloud-chinjufu')`
+find `ipc.access('cloud-chinjufu').ipc()` or use `window.cloudChinjufu`
 * async getItem(key: string): object  
   Get a cloud value
 * async setItem(key: string, value: object)  
