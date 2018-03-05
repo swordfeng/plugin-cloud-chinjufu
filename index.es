@@ -163,3 +163,12 @@ function cleanUp() {
 export const pluginWillUnload = () => {
     cleanUp();
 }
+
+function handleResponse(e) {
+    if (e.detail.path === '/kcsapi/api_port/port') {
+        client.setItem('port', e.detail.body);
+    }
+}
+
+ev.on('ready', () => window.addEventListener('game.response', handleResponse));
+ev.on('reset', () => window.removeEventListener('game.response', handleResponse));
