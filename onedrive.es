@@ -4,12 +4,14 @@ import { remote } from 'electron';
 import { URL } from 'url';
 import * as request from 'superagent';
 import * as path from 'path';
+import { StorageManager } from './storagemgr.es'
 
 const CLIENT_ID = '1d300286-97ec-48b1-9a9a-b03433562dc3';
 const CLIENT_SECRET = 'vrasgYITFP557![azMZ42~[';
 
-export class OneDriveClient {
+export class OneDriveClient extends StorageManager {
     constructor(onCredentialSet, initialCredential) {
+        super();
         this.onCredentialSet = onCredentialSet;
         this.authorized = false;
         this.session = null;
@@ -115,18 +117,13 @@ export class OneDriveClient {
             .get('https://graph.microsoft.com/v1.0/me/drive')
             .set('Authorization', 'Bearer ' + token);
         this.authorized = true;
+        console.log('onedrive authorized');
         await this.sessionInit();
     }
-
-    async sessionInit() {
-        this.session = {
-            id: Date.now().toString()
-        };
-        let root = await this.list('/');
-        let names = root.map(item => item.name);
-        if (!names.includes('data')) await this.createFolder('data');
-        if (!names.includes('events')) await this.createFolder('events');
-        await this.createFolder('events/' + this.session.id);
+    async deinit() {
+        if (this.session) {
+            await this.sessionDeinit();
+        }
     }
 
     async list(filepath) {
@@ -137,7 +134,7 @@ export class OneDriveClient {
         let response = await request
             .get(url)
             .set('Authorization', 'Bearer ' + token);
-        return response.body.value;
+        return response.body.value.map(item => item.name);
     }
     async createFolder(filepath) {
         let token = await this.getAccessToken();
@@ -146,7 +143,7 @@ export class OneDriveClient {
         if (dir === '' || dir === '/') {
             url = 'https://graph.microsoft.com/v1.0/me/drive/special/approot/children';
         } else {
-            url = `https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(filepath)}:/children`;
+            url = `https://graph.microsoft.com/v1.0/me/drive/special/approot:/${encodeURI(dir)}:/children`;
         }
         let response = await request
             .post(url)

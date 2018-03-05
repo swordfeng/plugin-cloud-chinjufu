@@ -20,13 +20,27 @@ let credential;
 let client;
 
 function loadCredential() {
-    credential = localStorage.getItem('poi-sync');
+    credential = localStorage.getItem('poi-sync-credential');
     if (credential !== null) credential = JSON.parse(credential);
     if (!credential) credential = { type: 'none' };
 }
 
 function saveCredential() {
-    localStorage.setItem('poi-sync', JSON.stringify(credential));
+    localStorage.setItem('poi-sync-credential', JSON.stringify(credential));
+}
+
+export function getLastSession() {
+    let date = localStorage.getItem('poi-sync-session');
+    let lastSession;
+    if (date === null) {
+        lastSession = null;
+        return;
+    }
+    lastSession = new Date(parseInt(date));
+    return lastSession;
+}
+export function setSession(session) {
+    localStorage.setItem('poi-sync-session', session.getTime());
 }
 
 export const settingsClass = class SyncSettings extends Component {
@@ -40,9 +54,12 @@ export const settingsClass = class SyncSettings extends Component {
         credential = { type: 'none' };
         saveCredential();
         ev.emit('reset');
+        if (client) client.deinit();
+        client = null;
     }
     loginOneDrive = () => {
         ev.emit('reset');
+        if (client) client.deinit();
         client = new OneDriveClient(odCred => {
             credential = {
                 type: 'onedrive',
@@ -53,7 +70,8 @@ export const settingsClass = class SyncSettings extends Component {
         localServer.start()
         .then(() => client.auth())
         .then(() => ev.emit('ready'))
-        .then(() => localServer.stop());
+        .then(() => localServer.stop())
+        .catch(err => ev.emit('error', err));
     }
     render() {
         return (
@@ -67,6 +85,8 @@ export const settingsClass = class SyncSettings extends Component {
         )
     }
 }
+
+let test = null;
 
 export const pluginDidLoad = () => {
     loadCredential();
@@ -87,9 +107,21 @@ export const pluginDidLoad = () => {
             }
         }
     })();
+    test = setInterval(() => {
+        if (client) client.publish('test', 'message');
+    }, 1000);
 }
 
 export const pluginWillUnload = () => {
     ev.emit('reset');
+    if (client) client.deinit();
+    client = null;
     localServer.stop();
+    clearInterval(test);
+    test = null;
 }
+
+ev.on('ready', () => console.log('ready'));
+ev.on('reset', () => console.log('reset'));
+ev.on('retriveFinished', () => console.log('retriveFinished'));
+ev.on('error', err => console.error(err));
