@@ -10,7 +10,7 @@ export class StorageManager {
             uploadqueue: {},
             collector: setInterval(() => this.collect(), 60 * 1000),
         };
-        if (this.session.lastSession === null) this.session.lastSession = this.session.session;
+        if (this.session.lastSession === null) this.session.lastSession = new Date(0);
         this.session.folder = `events/${this.session.session.getTime()}`;
         setSession(this.session.session);
         let root = await this.list('/');
