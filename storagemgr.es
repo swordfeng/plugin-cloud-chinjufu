@@ -65,7 +65,7 @@ export class StorageManager {
             let s = this.session.lastSession.getTime();
             let e = this.session.session.getTime();
             sessions = sessions.filter(v => s < parseInt(v) && parseInt(v) < e).sort((a, b) => a - b);
-            for (v of sessions) {
+            for (let v of sessions) {
                 let datalist = await this.list('events/' + v);
                 for (name of datalist) {
                     let data = JSON.parse(await this.download(`events/${v}/${name}`));

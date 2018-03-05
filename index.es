@@ -89,9 +89,6 @@ export const settingsClass = class SyncSettings extends Component {
     }
 }
 
-ev.on('ready', () => console.log('sync ready'));
-ev.on('reset', () => console.log('sync reset'));
-ev.on('retrieveFinished', () => console.log('sync retriveFinished'));
 ev.on('error', err => console.error(err));
 
 ev.on('ready', () => window.success(`Sync ready type: ${credential.type}`));
