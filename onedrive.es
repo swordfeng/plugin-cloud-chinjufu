@@ -67,7 +67,7 @@ export class OneDriveClient extends StorageManager {
                 window = null;
             });
         });
-        await this.save(await request
+        await this.save((await request
                 .post('https://login.microsoftonline.com/consumers/oauth2/v2.0/token')
                 .type('form')
                 .send({
@@ -77,7 +77,7 @@ export class OneDriveClient extends StorageManager {
                     redirect_uri: 'http://localhost:9080/onedrive_auth',
                     grant_type: 'authorization_code',
                     client_secret: CLIENT_SECRET
-                }).body);
+                })).body);
         await this.init();
     }
     async refresh() {
@@ -98,7 +98,7 @@ export class OneDriveClient extends StorageManager {
         let credential = {
             authCode: this.authCode,
             accessToken: data.access_token,
-            refreshToken: data.refresh_token,
+            refreshToken: data.refresh_token || this.refreshToken,
             expires: Date.now() + data.expires_in * 1000 - 30000
         };
         this.onCredentialSet(credential);
@@ -120,7 +120,6 @@ export class OneDriveClient extends StorageManager {
             .get('https://graph.microsoft.com/v1.0/me/drive')
             .set('Authorization', 'Bearer ' + token);
         this.authorized = true;
-        console.log('onedrive authorized');
         await this.sessionInit();
     }
     async deinit() {
