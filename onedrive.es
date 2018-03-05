@@ -24,7 +24,7 @@ export class OneDriveClient extends StorageManager {
         }
     }
     async auth() {
-        let code = await new Promise((resolve, reject) => {
+        this.authCode = await new Promise((resolve, reject) => {
             let state = Math.random() * 1000000 | 0;
             let window = new remote.BrowserWindow({
                 parent: remote.getCurrentWindow(),
@@ -67,17 +67,17 @@ export class OneDriveClient extends StorageManager {
                 window = null;
             });
         });
-        await this.save(code, (await request
+        await this.save(await request
                 .post('https://login.microsoftonline.com/consumers/oauth2/v2.0/token')
                 .type('form')
                 .send({
                     client_id: CLIENT_ID,
                     scope: 'user.read files.readwrite',
-                    code,
+                    code: this.authCode,
                     redirect_uri: 'http://localhost:9080/onedrive_auth',
                     grant_type: 'authorization_code',
                     client_secret: CLIENT_SECRET
-                })).body);
+                }).body);
         await this.init();
     }
     async refresh() {
@@ -94,15 +94,14 @@ export class OneDriveClient extends StorageManager {
                 client_secret: CLIENT_SECRET
             })).body);
     }
-    async save(authCode, data) {
+    async save(data) {
         let credential = {
-            authCode,
+            authCode: this.authCode,
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             expires: Date.now() + data.expires_in * 1000 - 30000
         };
         this.onCredentialSet(credential);
-        this.authCode = authCode;
         this.accessToken = credential.accessToken;
         this.refreshToken = credential.refreshToken;
         this.expires = new Date(credential.expires);

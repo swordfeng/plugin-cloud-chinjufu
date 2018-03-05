@@ -156,8 +156,8 @@ function cleanUp() {
     client = null;
     localServer.stop();
     remote.getCurrentWindow().removeListener('close', cleanUp);
-    window.cloudChinjufu = undefined;
     ipc.unregisterAll('cloud-chinjufu');
+    window.cloudChinjufu = undefined;
 }
 
 export const pluginWillUnload = () => {
