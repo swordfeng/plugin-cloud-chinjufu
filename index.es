@@ -42,7 +42,6 @@ export const settingsClass = class SyncSettings extends Component {
         ev.emit('reset');
     }
     loginOneDrive = () => {
-        credential = { type: 'none' };
         ev.emit('reset');
         client = new OneDriveClient(odCred => {
             credential = {
@@ -91,5 +90,6 @@ export const pluginDidLoad = () => {
 }
 
 export const pluginWillUnload = () => {
+    ev.emit('reset');
     localServer.stop();
 }
