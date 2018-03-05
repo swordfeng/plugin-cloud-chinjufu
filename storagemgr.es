@@ -6,9 +6,10 @@ export class StorageManager {
             lastSession: getLastSession(),
             session: new Date(),
             events: [],
+            eventsSize: 0,
             retrieved: [],
             uploadqueue: {},
-            collector: setInterval(() => this.collect(), 60 * 1000),
+            collector: setInterval(() => this.collect(), 120 * 1000),
         };
         if (this.session.lastSession === null) this.session.lastSession = new Date(0);
         this.session.folder = `events/${this.session.session.getTime()}`;
@@ -34,7 +35,12 @@ export class StorageManager {
         await this.upload('data/' + encodeURIComponent(key), JSON.stringify(value));
     }
     async publish(type, message) {
-        this.session.events.push({type, date: Date.now(), message});
+        let msg = {type, date: Date.now(), message};
+        let size = JSON.stringify(msg).length + 4;
+        if (size > 1 * 1024 * 1024) throw new Error('Message too long');
+        this.session.events.push(msg);
+        this.session.eventsSize += size;
+        if (this.session.eventsSize > 2 * 1024 * 1024) this.collect();
     }
     retrieve(type, since) {
         if (since === undefined) since = this.session.lastSession;
@@ -44,6 +50,7 @@ export class StorageManager {
         if (this.session.events.length === 0) return;
         let data = JSON.stringify(this.session.events);
         this.session.events = [];
+        this.session.eventsSize = 0;
         let id = Date.now();
         for (let retryCount = 0; retryCount < 3; retryCount++) {
             let upload = this.upload(this.session.folder + '/' + id, data);
