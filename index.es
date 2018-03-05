@@ -124,7 +124,7 @@ class CloudChinjufuObject extends EventEmitter {
         return await client.setItem(key, value);
     }
     async publish(type, message) {
-        return await client.publish(key, value);
+        return await client.publish(type, message);
     }
     retrieve(type, since) {
         return client.retrieve(type, since);
