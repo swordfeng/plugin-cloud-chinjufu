@@ -45,6 +45,7 @@ export class StorageManager {
         return result;
     }
     async collect() {
+        if (this.session.events.length === 0) return;
         let data = JSON.stringify(this.session.events);
         this.session.events = [];
         let id = Date.now();
