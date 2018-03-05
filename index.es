@@ -145,7 +145,7 @@ export const pluginDidLoad = () => {
             }
         }
     })();
-    remote.getCurrentWindow().on('close', cleanUp);
+    remote.getCurrentWindow().on('beforeunload', cleanUp);
     window.cloudChinjufu = new CloudChinjufuObject();
     ipc.register('cloud-chinjufu', { ipc: () => window.cloudChinjufu });
 }
@@ -155,7 +155,7 @@ function cleanUp() {
     if (client) client.deinit();
     client = null;
     localServer.stop();
-    remote.getCurrentWindow().removeListener('close', cleanUp);
+    remote.getCurrentWindow().removeListener('beforeunload', cleanUp);
     ipc.unregisterAll('cloud-chinjufu');
     window.cloudChinjufu = undefined;
 }
@@ -163,12 +163,3 @@ function cleanUp() {
 export const pluginWillUnload = () => {
     cleanUp();
 }
-
-function handleResponse(e) {
-    if (e.detail.path === '/kcsapi/api_port/port') {
-        client.setItem('port', e.detail.body);
-    }
-}
-
-ev.on('ready', () => window.addEventListener('game.response', handleResponse));
-ev.on('reset', () => window.removeEventListener('game.response', handleResponse));
