@@ -89,13 +89,11 @@ export const settingsClass = class SyncSettings extends Component {
     }
 }
 
-ev.on('error', err => console.error(err));
-
 ev.on('ready', () => window.success(`Sync ready type: ${credential.type}`));
-ev.on('reset', () => window.log(`Sync reset`));
+ev.on('reset', () => console.log(`Sync reset`));
 ev.on('retrieveFinished', () => window.log(`Sync offline events ready`));
 ev.on('error', err => window.error(`Sync ${err.name}: ${err.message}`));
-
+ev.on('error', err => console.error(err));
 
 class CloudChinjufuObject extends EventEmitter {
     constructor() {
@@ -146,7 +144,7 @@ export const pluginDidLoad = () => {
                 await client.init();
                 ev.emit('ready');
             } catch (err) {
-                throw err;
+                ev.emit('error', err);
             }
         }
     })();
