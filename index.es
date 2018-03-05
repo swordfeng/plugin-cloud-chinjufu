@@ -34,13 +34,10 @@ function saveCredential() {
 
 export function getLastSession() {
     let date = localStorage.getItem('poi-sync-session');
-    let lastSession;
     if (date === null) {
-        lastSession = null;
-        return;
+        return null;
     }
-    lastSession = new Date(parseInt(date));
-    return lastSession;
+    return new Date(parseInt(date));
 }
 export function setSession(session) {
     localStorage.setItem('poi-sync-session', session.getTime());

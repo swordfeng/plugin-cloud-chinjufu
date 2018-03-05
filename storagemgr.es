@@ -38,29 +38,29 @@ export class StorageManager {
     }
     retrieve(type, since) {
         if (since === undefined) since = this.session.lastSession;
-        let result = []
-        for (let msg of this.session.retrieved) {
-            if (msg.type === type && msg.date >= since) result.push(msg);
-        }
-        return result;
+        return this.session.retrieved.filter(m => m.type === type && m.date >= since);
     }
     async collect() {
         if (this.session.events.length === 0) return;
         let data = JSON.stringify(this.session.events);
         this.session.events = [];
         let id = Date.now();
-        let upload = this.upload(this.session.folder + '/' + id, data);
-        this.session.uploadqueue[id] = upload;
-        try {
-            await upload;
-        } catch (err) {
-            ev.emit('error', err);
+        for (let retryCount = 0; retryCount < 3; retryCount++) {
+            let upload = this.upload(this.session.folder + '/' + id, data);
+            this.session.uploadqueue[id] = upload;
+            try {
+                await upload;
+                break;
+            } catch (err) {
+                ev.emit('error', err);
+            }
         }
         delete this.session.uploadqueue[id];
         return id;
     }
     async doRetrieve() {
-        try {
+        for (let retryCount = 0; retryCount < 3; retryCount++) try {
+            this.session.retrieved = [];
             let sessions = await this.list('events');
             let s = this.session.lastSession.getTime();
             let e = this.session.session.getTime();
@@ -72,6 +72,7 @@ export class StorageManager {
                     this.session.retrieved = this.session.retrieved.concat(data);
                 }
             }
+            break;
         } catch (err) {
             ev.emit('error', err);
         }
