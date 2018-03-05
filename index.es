@@ -33,13 +33,17 @@ export const settingsClass = class SyncSettings extends Component {
     constructor(props) {
         super(props)
         this.state = { type: credential.type };
+        ev.on('reset', () => this.setState({ type: credential.type }));
+        ev.on('ready', () => this.setState({ type: credential.type }));
     }
     reset = () => {
         credential = { type: 'none' };
         saveCredential();
-        this.setState({ type: credential.type });
+        ev.emit('reset');
     }
     loginOneDrive = () => {
+        credential = { type: 'none' };
+        ev.emit('reset');
         client = new OneDriveClient(odCred => {
             credential = {
                 type: 'onedrive',
@@ -47,13 +51,16 @@ export const settingsClass = class SyncSettings extends Component {
             };
             saveCredential();
         });
-        client.auth().then(() => this.setState({ type: credential.type }));
+        localServer.start()
+        .then(() => client.auth())
+        .then(() => ev.emit('ready'))
+        .then(() => localServer.stop());
     }
     render() {
         return (
             <Grid>
                 <Row>
-                    <Col xs={3}>Status: { this.state.type }</Col>
+                    <Col xs={3}>Status: {this.state.type}</Col>
                     <Col xs={2}><Button onClick={this.reset}>Reset</Button></Col>
                     <Col xs={2}><Button onClick={this.loginOneDrive}>OneDrive</Button></Col>
                 </Row>
@@ -63,7 +70,6 @@ export const settingsClass = class SyncSettings extends Component {
 }
 
 export const pluginDidLoad = () => {
-    //window.addEventListener('game.response', handleResponse)
     loadCredential();
     (async function () {
         if (credential.type === 'onedrive') {
@@ -76,6 +82,7 @@ export const pluginDidLoad = () => {
             }, credential.credential);
             try {
                 await client.init();
+                ev.emit('ready');
             } catch (err) {
                 throw err;
             }
@@ -84,6 +91,5 @@ export const pluginDidLoad = () => {
 }
 
 export const pluginWillUnload = () => {
-    //window.removeEventListener('game.response', handleResponse)
     localServer.stop();
 }

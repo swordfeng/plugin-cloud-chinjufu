@@ -180,16 +180,6 @@ export class OneDriveClient {
             throw err;
         }
     }
-
-    async get(key) {
-        return await this.download(path.join(['data', encodeURIComponent(key)]));
-    }
-    async put(key, value) {
-        await this.upload(path.join(['data', encodeURIComponent(key)]), value);
-    }
-
-    async publish(type, data) {}
-    async retrieve(type, since) {}
 }
 
 
